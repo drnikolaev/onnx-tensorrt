@@ -39,14 +39,17 @@ namespace onnx2trt {
 // to be identified when deserializing.
 class Plugin : public nvinfer1::IPluginExt, public IOwnable {
 public:
+  Plugin() :
+      _max_batch_size(0UL),
+      _data_type(nvinfer1::DataType::kFLOAT),
+      _data_format(nvinfer1::PluginFormat::kNCHW) {}
+
   // TODO(benbarsdell): Once TRT 4 support is dropped, our handling of plugins
   // can be simplified by removing things like IOwnable, getPluginType
   // serialization, PluginFactory etc. that are now built into TRT >=5.
-#if NV_TENSORRT_MAJOR < 5
-  virtual nvinfer1::IPluginExt* clone() const = 0;
-  virtual const char* getPluginType() const = 0;
-#endif
+
   virtual const char* getPluginVersion() const { return "1"; }
+  virtual const char* getPluginType() const = 0;
 
   nvinfer1::Dims const&  getInputDims(int index) const { return _input_dims.at(index); }
   size_t                 getMaxBatchSize()       const { return _max_batch_size; }
@@ -69,8 +72,8 @@ public:
   void destroy() override { delete this; }
 protected:
   void   deserializeBase(void const*& serialData, size_t& serialLength);
-  size_t getBaseSerializationSize();
-  void   serializeBase(void*& buffer);
+  size_t getBaseSerializationSize() const;
+  void   serializeBase(void*& buffer) const;
 
   std::vector<nvinfer1::Dims> _input_dims;
   size_t                      _max_batch_size;
@@ -85,35 +88,28 @@ protected:
   nvinfer1::IPluginExt*  _ext;
 public:
   PluginAdapter(nvinfer1::IPlugin* plugin) :
-    _plugin(plugin), _ext(dynamic_cast<IPluginExt*>(plugin)) {}
-  nvinfer1::IPluginExt* clone() const override {
-#if NV_TENSORRT_MAJOR < 5
-    // Clone is not (and should not be) used prior to TRT 5
-    return nullptr;
-#else
-    return _ext->clone();
-#endif
-  }
-  virtual int getNbOutputs() const override;
-  virtual nvinfer1::Dims getOutputDimensions(int index,
-                                             const nvinfer1::Dims *inputDims,
-                                             int nbInputs) override ;
-  virtual void serialize(void* buffer) override;
-  virtual size_t getSerializationSize() override;
+    _plugin(plugin), _ext(dynamic_cast<nvinfer1::IPluginExt*>(plugin)) {}
 
-  virtual int  initialize() override;
-  virtual void terminate() override;
+  int getNbOutputs() const override;
+  nvinfer1::Dims getOutputDimensions(int index,
+                                     const nvinfer1::Dims *inputDims,
+                                     int nbInputs) override ;
+  void serialize(void* buffer) override;
+  size_t getSerializationSize() override;
 
-  virtual bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const override;
-  virtual void configureWithFormat(const nvinfer1::Dims *inputDims, int nbInputs,
-                                   const nvinfer1::Dims *outputDims, int nbOutputs,
-                                   nvinfer1::DataType type,
-                                   nvinfer1::PluginFormat format,
-                                   int maxBatchSize);
-  virtual size_t getWorkspaceSize(int maxBatchSize) const override;
-  virtual int enqueue(int batchSize,
-                      const void *const *inputs, void **outputs,
-                      void *workspace, cudaStream_t stream) override;
+  int  initialize() override;
+  void terminate() override;
+
+  bool supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const override;
+  void configureWithFormat(const nvinfer1::Dims *inputDims, int nbInputs,
+                           const nvinfer1::Dims *outputDims, int nbOutputs,
+                           nvinfer1::DataType type,
+                           nvinfer1::PluginFormat format,
+                           int maxBatchSize);
+  size_t getWorkspaceSize(int maxBatchSize) const override;
+  int enqueue(int batchSize,
+              const void *const *inputs, void **outputs,
+              void *workspace, cudaStream_t stream) override;
 };
 
 // This makes a plugin compatible with onnx2trt::PluginFactory by serializing
@@ -139,6 +135,18 @@ public:
   }
   const char* getPluginType() const override {
     return _plugin->getPluginType();
+  }
+
+  int getNbOutputs() const override { return _plugin->getNbOutputs(); }
+  nvinfer1::Dims getOutputDimensions(int index,
+      const nvinfer1::Dims *inputDims,
+      int nbInputs) override {
+    return _plugin->getOutputDimensions(index, inputDims, nbInputs);
+  }
+  int enqueue(int batchSize,
+              const void *const *inputs, void **outputs,
+              void *workspace, cudaStream_t stream) override {
+    return _plugin->enqueue(batchSize, inputs, outputs, workspace, stream);
   }
   void destroy() override { delete this; }
 };

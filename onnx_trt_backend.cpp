@@ -65,10 +65,10 @@ onnxStatus CheckShape(const nvinfer1::Dims &dims,
                       const onnxTensorDescriptorV1 &desc,
                       bool allow_same_size) {
   bool matched = false;
-  if (desc.dimensions == dims.nbDims + 1) {
+  if ((int)desc.dimensions == dims.nbDims + 1) {
     matched = true;
     for (int i = 0; i < dims.nbDims; ++i) {
-      if (desc.shape[i + 1] != dims.d[i]) {
+      if ((int)desc.shape[i + 1] != dims.d[i]) {
         return ONNXIFI_STATUS_MISMATCHING_SHAPE;
       }
     }
@@ -79,7 +79,7 @@ onnxStatus CheckShape(const nvinfer1::Dims &dims,
     }
     size_t desc_size = 1;
     // Skip the first dim which is batch size
-    for (int i = 1; i < desc.dimensions; ++i) {
+    for (int i = 1; i < (int)desc.dimensions; ++i) {
       desc_size *= desc.shape[i];
     }
     matched = (dim_size == desc_size) ? true : false;
@@ -523,7 +523,7 @@ onnxGetBackendIDs(onnxBackendID *backendIDs, size_t *numBackends) {
       *numBackends = nDevices;
       return ONNXIFI_STATUS_FALLBACK;
     } else {
-      size_t len = (*numBackends < nDevices) ? (*numBackends) : nDevices;
+      size_t len = ((int)*numBackends < nDevices) ? (*numBackends) : nDevices;
       std::vector<std::unique_ptr<OnnxTensorRTBackendID>> vtmp;
       for (size_t i = 0; i < len; ++i) {
         vtmp.emplace_back(new OnnxTensorRTBackendID(i));
@@ -531,7 +531,7 @@ onnxGetBackendIDs(onnxBackendID *backendIDs, size_t *numBackends) {
       for (size_t i = 0; i < len; ++i) {
         backendIDs[i] = (onnxBackendID)(vtmp[i].release());
       }
-      return (*numBackends < nDevices) ? ONNXIFI_STATUS_FALLBACK
+      return ((int)*numBackends < nDevices) ? ONNXIFI_STATUS_FALLBACK
                                        : ONNXIFI_STATUS_SUCCESS;
     }
   });

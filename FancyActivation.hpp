@@ -75,14 +75,11 @@ public:
   FancyActivationPlugin(void const* serialData, size_t serialLength) {
     this->deserialize(serialData, serialLength);
   }
-  FancyActivationPlugin* clone() const override {
-    return new FancyActivationPlugin(_activation_type, _alpha, _gamma);
-  }
-  virtual const char* getPluginType() const override { return "FancyActivation"; }
-  virtual int getNbOutputs() const override { return 1; }
-  virtual nvinfer1::Dims getOutputDimensions(int index,
-                                             const nvinfer1::Dims *inputDims,
-                                             int nbInputs) override {
+  const char* getPluginType() const override { return "FancyActivation"; }
+  int getNbOutputs() const override { return 1; }
+  nvinfer1::Dims getOutputDimensions(int index,
+                                     const nvinfer1::Dims *inputDims,
+                                     int nbInputs) override {
     assert(index == 0);
     assert(inputDims);
     assert(nbInputs == 1);
@@ -90,12 +87,11 @@ public:
   }
   bool supportsFormat(nvinfer1::DataType type,
                       nvinfer1::PluginFormat format) const override;
-
   int enqueue(int batchSize,
               const void *const *inputs, void **outputs,
               void *workspace, cudaStream_t stream) override;
   template <typename Data>
-    int doEnqueue(int batchSize,
-                  const void *const *inputs, void **outputs,
-                  void *workspace, cudaStream_t stream);
+  int doEnqueue(int batchSize,
+                const void *const *inputs, void **outputs,
+                void *workspace, cudaStream_t stream);
 };

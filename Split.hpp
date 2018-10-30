@@ -58,15 +58,12 @@ public:
   SplitPlugin(void const* serialData, size_t serialLength) {
     this->deserialize(serialData, serialLength);
   }
-  SplitPlugin* clone() const override {
-    return new SplitPlugin(_axis, _output_lengths);
-  }
-  virtual const char* getPluginType() const override { return "Split"; }
-  virtual int getNbOutputs() const override { return _output_lengths.size(); }
-  virtual nvinfer1::Dims getOutputDimensions(int index,
-                                             const nvinfer1::Dims *inputs, int nbInputDims) override;
-  virtual int initialize() override;
-  virtual int enqueue(int batchSize,
+  const char* getPluginType() const override { return "Split"; }
+  int getNbOutputs() const override { return _output_lengths.size(); }
+  nvinfer1::Dims getOutputDimensions(int index,
+      const nvinfer1::Dims *inputs, int nbInputDims) override;
+  int initialize() override;
+  int enqueue(int batchSize,
                       const void *const *inputs, void **outputs,
                       void *workspace, cudaStream_t stream) override;
 };

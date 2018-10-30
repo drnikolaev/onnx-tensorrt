@@ -43,15 +43,15 @@ public:
     : _network(network), _logger(logger) {}
   virtual nvinfer1::INetworkDefinition* network() override { return _network; }
   nvinfer1::ILogger& logger() { return *_logger; }
-  virtual ShapedWeights createTempWeights(ShapedWeights::DataType type,
-                                          nvinfer1::Dims shape) override {
+  ShapedWeights createTempWeights(ShapedWeights::DataType type,
+                                  nvinfer1::Dims shape) override {
     ShapedWeights weights(type, nullptr, shape);
     _temp_bufs.push_back(std::vector<uint8_t>(weights.size_bytes()));
     weights.values = _temp_bufs.back().data();
     return weights;
   }
-  virtual nvinfer1::IPluginLayer* addPlugin(Plugin* plugin,
-                                            std::vector<nvinfer1::ITensor*> const& inputs) override {
+  nvinfer1::IPluginLayer* addPlugin(Plugin* plugin,
+      std::vector<nvinfer1::ITensor*> const& inputs) override {
     // Note: Plugins are wrapped here to make them work with
     // onnx2trt::PluginFactory.
     auto* wrapped_plugin = new TypeSerializingPlugin(plugin);

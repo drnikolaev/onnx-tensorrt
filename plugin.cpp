@@ -28,7 +28,7 @@ namespace onnx2trt {
 
 // ========================= Plugin =====================
 
-  void Plugin::serializeBase(void*& buffer)  {
+  void Plugin::serializeBase(void*& buffer) const {
     serialize_value(&buffer, _input_dims);
     serialize_value(&buffer, _max_batch_size);
     serialize_value(&buffer, _data_type);
@@ -42,7 +42,7 @@ namespace onnx2trt {
     deserialize_value(&serialData, &serialLength, &_data_format);
   }
 
-  size_t Plugin::getBaseSerializationSize()  {
+  size_t Plugin::getBaseSerializationSize() const {
     return (serialized_size(_input_dims) +
             serialized_size(_max_batch_size) +
             serialized_size(_data_type) +
@@ -82,7 +82,7 @@ namespace onnx2trt {
   size_t PluginAdapter::getSerializationSize() {
     return _plugin->getSerializationSize();
   }
-  bool PluginAdapter::supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const 
+  bool PluginAdapter::supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const
   {
     if (_ext)
       return _ext->supportsFormat(type, format);

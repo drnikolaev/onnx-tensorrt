@@ -50,10 +50,10 @@ public:
     _plugin_registry[plugin_type] = func;
   }
   // This is used by TRT during engine deserialization
-  virtual nvinfer1::IPlugin* createPlugin(const char* layerName,
-                                          const void* serialData,
-                                          size_t serialLength) override;
-  virtual void destroy() override { delete this; }
+  nvinfer1::IPlugin* createPlugin(const char* layerName,
+                                  const void* serialData,
+                                  size_t serialLength) override;
+  void destroy() override { delete this; }
 };
 
 } // namespace onnx2trt

@@ -54,15 +54,11 @@ public:
   ResizeNearestPlugin(void const* serialData, size_t serialLength) {
     this->deserialize(serialData, serialLength);
   }
-  ResizeNearestPlugin* clone() const override {
-    std::vector<float> scale(_scale, _scale + _ndims);
-    return new ResizeNearestPlugin(scale);
-  }
-  virtual const char* getPluginType() const override { return "ResizeNearest"; }
-  virtual int getNbOutputs() const override { return 1; }
-  virtual nvinfer1::Dims getOutputDimensions(int index,
-                                             const nvinfer1::Dims *inputs, int nbInputDims) override;
-  virtual int initialize() override;
+  const char* getPluginType() const override { return "ResizeNearest"; }
+  int getNbOutputs() const override { return 1; }
+  nvinfer1::Dims getOutputDimensions(int index,
+      const nvinfer1::Dims *inputs, int nbInputDims) override;
+  int initialize() override;
   int enqueue(int batchSize,
               const void *const *inputs, void **outputs,
               void *workspace, cudaStream_t stream) override;
